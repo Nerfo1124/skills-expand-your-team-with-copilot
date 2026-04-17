@@ -553,6 +553,9 @@ document.addEventListener("DOMContentLoaded", () => {
         </ul>
       </div>
       <div class="activity-card-actions">
+        <button class="share-button" data-activity="${name}" aria-label="Share this activity">
+          <span class="share-icon">🔗</span> Share
+        </button>
         ${
           currentUser
             ? `
@@ -587,7 +590,38 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
+    // Add click handler for share button
+    const shareButton = activityCard.querySelector(".share-button");
+    shareButton.addEventListener("click", () => {
+      shareActivity(name, details);
+    });
+
     activitiesList.appendChild(activityCard);
+  }
+
+  // Share an activity using the Web Share API or clipboard fallback
+  async function shareActivity(name, details) {
+    const schedule = formatSchedule(details);
+    const shareText = `Check out this activity at Mergington High School!\n\n${name}\n${details.description}\nSchedule: ${schedule}`;
+    const shareTitle = `Mergington High School – ${name}`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: shareTitle, text: shareText });
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Share failed:", error);
+        }
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareText);
+        showMessage("Activity details copied to clipboard!", "success");
+      } catch (error) {
+        showMessage("Could not copy activity details – please try again.", "error");
+        console.error("Clipboard copy failed:", error);
+      }
+    }
   }
 
   // Event listeners for search and filter
